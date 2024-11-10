@@ -1,0 +1,67 @@
+body {
+    display: flex;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #fefefe;
+    min-height: 100vh;
+}
+
+#game-container {
+    width: 75%;
+    height: 80vh;
+    background-color: #000000;
+    display: flex;
+    justify-content: center;
+    border: 1px solid #333;
+    align-items: center;
+}
+
+#game-canvas {
+    width: 1000px;
+    height: 80vh;
+    border: 1px solid #333;
+    background-color: #fffcfc; /* Màu xám cho đường đua */
+}
+
+.info-panel {
+    width: 25%;
+    height: 80.17vh;
+    border: 1px solid #333;
+    background-color: #fbf4f4;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.info-panel h1 {
+    font-size: 24px;
+    color: #000000;
+    margin-bottom: 20px;
+}
+
+.info-panel p {
+    font-size: 20px;
+    color: #000000;
+    margin: 10px 0;
+}
+
+#score, #speed, #fuel {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+.play-button {
+    font-size: 20px;
+    padding: 10px 20px;
+    background-color: #ff0000;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.play-button:hover {
+    background-color: #cc0000;
+}
