@@ -18,11 +18,11 @@ let playerCar = {
     imgHeight: 90,
     width: 60 * 1 / 2,
     height: 120 * 2 / 3,
-    speed: 10,
+    speed: 7,
     rotation: 0
 };
 let obstacles = [];
-let obstacleSpeed = 3;
+let obstacleSpeed = 5;
 let playerImage = new Image();
 playerImage.src = 'img/player.png';
 
@@ -109,7 +109,7 @@ function createObstacle() {
         ));
     } while (!positionValid);
 
-    const speed = Math.random() * 2 + 2;
+    const speed = Math.random() * 3 + 5;
     obstacles.push({ x, y, imgWidth, imgHeight, width, height, speed, img });
 }
 
