@@ -20,7 +20,8 @@ body {
     width: 1000px;
     height: 80vh;
     border: 1px solid #333;
-    background-color: #fffcfc; /* Màu xám cho đường đua */
+    background-color: #fffcfc;
+    /* Màu xám cho đường đua */
 }
 
 .info-panel {
@@ -47,7 +48,9 @@ body {
     margin: 10px 0;
 }
 
-#score, #speed, #fuel {
+#score,
+#speed,
+#fuel {
     color: #ff0000;
     font-weight: bold;
 }
@@ -60,8 +63,27 @@ body {
     border: none;
     cursor: pointer;
     margin-top: 20px;
+    border-radius: 10px;
 }
 
 .play-button:hover {
     background-color: #cc0000;
+}
+
+#game-over-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 10;
+}
+
+#game-over-container h2,
+#game-over-container p {
+    margin: 10px 0;
 }

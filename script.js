@@ -2,6 +2,9 @@ const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 const fuelElement = document.getElementById('fuel');
+const gameOverContainer = document.getElementById('game-over-container');
+const finalScoreElement = document.getElementById('final-score');
+const customMessageElement = document.getElementById('custom-message');
 
 let score = 0;
 let fuel = 100;
@@ -34,7 +37,6 @@ const obstacleImages = [
 });
 
 let targetRotation = 0;
-let gameLoopInterval;
 let lineOffset = 0;
 let keys = {
     ArrowLeft: false,
@@ -128,7 +130,7 @@ function checkCollision() {
         ) {
             collisionSound.play(); // Phát âm thanh va chạm
             stopGame();
-            alert("Game Over! Your score: " + score);
+            showGameOverContainer("Better luck next time!");
             return;
         }
     }
@@ -165,6 +167,8 @@ function smoothRotation() {
 }
 
 function gameLoop() {
+    if (!gameRunning) return; // Kiểm tra nếu gameRunning là false thì dừng vòng lặp
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawTrack();
     smoothRotation();
@@ -183,23 +187,22 @@ function gameLoop() {
 
     if (fuel <= 0) {
         stopGame();
-        alert("Game Over! Your score: " + score);
+        showGameOverContainer("Fuel exhausted! Try again.");
     } else {
         requestAnimationFrame(gameLoop);
     }
 }
 
 function startGame() {
-    if (gameLoopInterval) cancelAnimationFrame(gameLoopInterval);
+    if (gameRunning) return; // Nếu game đã đang chạy, không khởi động lại
     resetGameVariables();
     gameRunning = true;
-    gameLoop();
+    requestAnimationFrame(gameLoop); // Đảm bảo không sử dụng `setInterval`
     backgroundMusic.play(); // Phát nhạc nền
 }
 
 function stopGame() {
     gameRunning = false;
-    cancelAnimationFrame(gameLoopInterval);
     backgroundMusic.pause(); // Dừng nhạc nền
 }
 
@@ -213,8 +216,17 @@ function resetGameVariables() {
     fuel = 100;
     scoreElement.textContent = score;
     fuelElement.textContent = fuel;
+    gameOverContainer.style.display = 'none'; // Ẩn container thông báo khi bắt đầu lại game
 }
 
 function restartGame() {
-    startGame();
+    stopGame(); // Dừng game trước khi khởi động lại
+    startGame(); // Khởi động lại game
+}
+
+function showGameOverContainer(message) {
+    finalScoreElement.textContent = score;
+    customMessageElement.textContent = message;
+    gameOverContainer.style.display = 'block';
+    stopGame(); // Đảm bảo dừng game khi hiển thị thông báo
 }
