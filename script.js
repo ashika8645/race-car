@@ -34,9 +34,29 @@ const obstacleImages = [
 });
 
 let targetRotation = 0;
-let gameLoopInterval;  
+let gameLoopInterval;
+let lineOffset = 0;
+let keys = {
+    ArrowLeft: false,
+    ArrowRight: false,
+    ArrowUp: false,
+    ArrowDown: false
+};
 
-// Vẽ đường đua (nét đứt cho các làn)
+// Nhạc nền và hiệu ứng âm thanh
+let backgroundMusic = new Audio('audio/background.mp3');
+let collisionSound = new Audio('audio/collision.mp3');
+
+backgroundMusic.loop = true; // Lặp lại nhạc nền
+
+document.addEventListener('keydown', (e) => {
+    if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+});
+
+document.addEventListener('keyup', (e) => {
+    if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+});
+
 function drawTrack() {
     ctx.fillStyle = '#808080';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -44,18 +64,20 @@ function drawTrack() {
     const laneWidth = canvas.width / 4;
     ctx.strokeStyle = '#FFFF00';
     ctx.lineWidth = 2;
-    ctx.setLineDash([10, 10]);
+    ctx.setLineDash([20, 20]);
 
     for (let i = 1; i < 4; i++) {
         ctx.beginPath();
-        ctx.moveTo(laneWidth * i, 0);
-        ctx.lineTo(laneWidth * i, canvas.height);
+        ctx.moveTo(laneWidth * i, lineOffset);
+        ctx.lineTo(laneWidth * i, canvas.height + lineOffset);
         ctx.stroke();
     }
     ctx.setLineDash([]);
+
+    lineOffset += 5; // Tốc độ của đường kẻ
+    if (lineOffset > 40) lineOffset = 0; // Đặt lại vị trí khi vượt quá 1 chu kỳ
 }
 
-// Vẽ xe người chơi với góc xoay
 function drawPlayerCar() {
     ctx.save();
     ctx.translate(playerCar.x + playerCar.width / 2, playerCar.y + playerCar.height / 2);
@@ -64,21 +86,31 @@ function drawPlayerCar() {
     ctx.restore();
 }
 
-// Tạo chướng ngại vật
 function createObstacle() {
     const img = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
     const imgWidth = 80;
     const imgHeight = 100 * 2 / 3;
     const width = imgWidth * 1 / 3;
     const height = imgHeight * 2 / 3;
-    const x = Math.floor(Math.random() * (canvas.width - width));
-    const y = -height;
-    const speed = Math.random() * 2 + 2;
 
+    let x, y;
+    let positionValid;
+
+    do {
+        x = Math.floor(Math.random() * (canvas.width - width));
+        y = -height;
+        positionValid = obstacles.every(obs => (
+            x + width < obs.x || 
+            x > obs.x + obs.width || 
+            y + height < obs.y || 
+            y > obs.y + obs.height
+        ));
+    } while (!positionValid);
+
+    const speed = Math.random() * 2 + 2;
     obstacles.push({ x, y, imgWidth, imgHeight, width, height, speed, img });
 }
 
-// Cập nhật vị trí chướng ngại vật
 function updateObstacles() {
     for (let obs of obstacles) {
         obs.y += obs.speed;
@@ -86,7 +118,6 @@ function updateObstacles() {
     obstacles = obstacles.filter(obs => obs.y < canvas.height);
 }
 
-// Kiểm tra va chạm
 function checkCollision() {
     for (let obs of obstacles) {
         if (
@@ -95,6 +126,7 @@ function checkCollision() {
             playerCar.y < obs.y + obs.height &&
             playerCar.y + playerCar.height > obs.y
         ) {
+            collisionSound.play(); // Phát âm thanh va chạm
             stopGame();
             alert("Game Over! Your score: " + score);
             return;
@@ -102,23 +134,41 @@ function checkCollision() {
     }
 }
 
-// Vẽ chướng ngại vật
 function drawObstacles() {
     for (let obs of obstacles) {
         ctx.drawImage(obs.img, obs.x, obs.y, obs.imgWidth, obs.imgHeight);
     }
 }
 
-// Hiệu ứng xoay mượt
-function smoothRotation() {
-    playerCar.rotation += (targetRotation - playerCar.rotation) * 0.2;
+function updatePlayerPosition() {
+    if (keys.ArrowLeft && playerCar.x > 0) {
+        playerCar.x -= playerCar.speed;
+        targetRotation = -20;
+    }
+    if (keys.ArrowRight && playerCar.x < canvas.width - playerCar.width) {
+        playerCar.x += playerCar.speed;
+        targetRotation = 20;
+    }
+    if (keys.ArrowUp && playerCar.y > 0) {
+        playerCar.y -= playerCar.speed;
+    }
+    if (keys.ArrowDown && playerCar.y < canvas.height - playerCar.height) {
+        playerCar.y += playerCar.speed;
+    }
 }
 
-// Vòng lặp game
+function smoothRotation() {
+    if (!keys.ArrowLeft && !keys.ArrowRight) {
+        targetRotation = 0;
+    }
+    playerCar.rotation += (targetRotation - playerCar.rotation) * 0.1;
+}
+
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawTrack();
     smoothRotation();
+    updatePlayerPosition();
     drawPlayerCar();
     updateObstacles();
     checkCollision();
@@ -134,24 +184,25 @@ function gameLoop() {
     if (fuel <= 0) {
         stopGame();
         alert("Game Over! Your score: " + score);
+    } else {
+        requestAnimationFrame(gameLoop);
     }
 }
 
-// Bắt đầu game
 function startGame() {
-    if (gameLoopInterval) clearInterval(gameLoopInterval); 
-    resetGameVariables();  
+    if (gameLoopInterval) cancelAnimationFrame(gameLoopInterval);
+    resetGameVariables();
     gameRunning = true;
-    gameLoopInterval = setInterval(gameLoop, 1000 / 60);
+    gameLoop();
+    backgroundMusic.play(); // Phát nhạc nền
 }
 
-// Dừng game
 function stopGame() {
     gameRunning = false;
-    clearInterval(gameLoopInterval);  
+    cancelAnimationFrame(gameLoopInterval);
+    backgroundMusic.pause(); // Dừng nhạc nền
 }
 
-// Khởi tạo lại các biến
 function resetGameVariables() {
     playerCar.x = canvas.width / 2 - playerCar.width / 2;
     playerCar.y = canvas.height - 80;
@@ -164,32 +215,6 @@ function resetGameVariables() {
     fuelElement.textContent = fuel;
 }
 
-// Restart game
 function restartGame() {
     startGame();
 }
-
-// Di chuyển xe người chơi (trái/phải, lên/xuống) và xoay
-document.addEventListener('keydown', (e) => {
-    if (!gameRunning) return;
-
-    if (e.key === 'ArrowLeft' && playerCar.x > 0) {
-        playerCar.x -= playerCar.speed;
-        targetRotation = -20;  
-    } else if (e.key === 'ArrowRight' && playerCar.x < canvas.width - playerCar.width) {
-        playerCar.x += playerCar.speed;
-        targetRotation = 20; 
-    } else if (e.key === 'ArrowUp' && playerCar.y > 0) {
-        playerCar.y -= playerCar.speed;
-    } else if (e.key === 'ArrowDown' && playerCar.y < canvas.height - playerCar.height) {
-        playerCar.y += playerCar.speed;
-    }
-});
-
-document.addEventListener('keyup', (e) => {
-    if (!gameRunning) return;
-
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        targetRotation = 0; 
-    }
-});
